@@ -6,25 +6,29 @@ export const cellCmp = (db: DB, col: number, row: number) => {
   const state = db.deref();
   const cell = getCellOrThrow(state.grid, col, row);
 
-  const isRevealed = cell.isClicked || state.playState === "win" || state.playState === "lose";
+  const { text, background, color } = (() => {
+    const color = "black";
 
-  const mineCount = isRevealed ? getMineCount(state, col, row) : 0;
-
-  const { text, background } = (() => {
-    if (isRevealed) {
+    if (cell.isClicked || state.playState === "win" || state.playState === "lose") {
       if (cell.isMine) {
-        return { text: "💣", background: "red" };
+        return { text: "💣", background: "red", color };
       }
+
+      const mineCount = getMineCount(state, col, row);
 
       if (mineCount === 0) {
-        return { text: "", background: "rgb(220, 220, 220)" };
+        return { text: "", background: "rgb(220, 220, 220)", color };
       }
 
-      return { text: `${mineCount}`, background: "rgb(220, 220, 220)" };
+      return {
+        text: `${mineCount}`,
+        background: "rgb(220, 220, 220)",
+        color: mineCount === 1 ? "green" : mineCount === 2 ? "green" : "red",
+      };
     } else if (cell.isFlagged) {
-      return { text: "🚩", background: "rgb(220, 220, 220)" };
+      return { text: "🚩", background: "rgb(220, 220, 220)", color };
     } else {
-      return { text: "?", background: "rgb(255, 255, 255)" };
+      return { text: "?", background: "rgb(255, 255, 255)", color };
     }
   })();
 
@@ -34,9 +38,7 @@ export const cellCmp = (db: DB, col: number, row: number) => {
         event.preventDefault();
         markCell(db, col, row);
       },
-      onclick: () => {
-        checkCell(db, col, row);
-      },
+      onclick: () => checkCell(db, col, row),
       style: {
         "font-size": "4vh",
         "grid-column-start": col + 1,
@@ -48,14 +50,7 @@ export const cellCmp = (db: DB, col: number, row: number) => {
         "align-items": "center",
         border: "1px black solid",
         background,
-        color:
-          mineCount === 0
-            ? " black"
-            : mineCount === 1
-            ? "green"
-            : mineCount === 2
-            ? "orange"
-            : "red",
+        color,
       },
     },
     text,
