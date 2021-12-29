@@ -1,6 +1,14 @@
 import { range } from "@thi.ng/transducers";
 import { map } from "@thi.ng/transducers/map";
-import { DB, Grid, Cell, State } from "./api";
+import {
+  DB,
+  Grid,
+  Cell,
+  State,
+  DEFAULT_NUM_COLS,
+  DEFAULT_NUM_ROWS,
+  DEFAULT_CHANCE_OF_MINE,
+} from "./api";
 
 // prettier-ignore
 const NEIGHBOR_DELTAS = [
@@ -14,11 +22,15 @@ const NEIGHBOR_DELTAS = [
   { col: 1, row: 1 },   // se
 ];
 
+export const getNumRows = (grid: Grid): number => grid.length;
+
+export const getNumCols = (grid: Grid): number => (grid.length > 0 ? grid[0].length : 0);
+
 const isValidPosition = (grid: Grid, col: number, row: number): boolean => {
-  return row >= 0 && row < grid.length && col >= 0 && col < grid[0].length;
+  return row >= 0 && row < getNumRows(grid) && col >= 0 && col < getNumCols(grid);
 };
 
-export const getCell = (grid: Grid, col: number, row: number): Cell | undefined => {
+const getCell = (grid: Grid, col: number, row: number): Cell | undefined => {
   if (!isValidPosition(grid, col, row)) {
     return undefined;
   }
@@ -36,7 +48,21 @@ export const getCellOrThrow = (grid: Grid, col: number, row: number): Cell => {
   return cell;
 };
 
-export const checkCell_ = (state: State, col: number, row: number): State => {
+export const getMineCount = (state: State, col: number, row: number): number => {
+  const count = NEIGHBOR_DELTAS.reduce((accum, { col: colDelta, row: rowDelta }) => {
+    const cell = getCell(state.grid, col + colDelta, row + rowDelta);
+
+    if (cell === undefined || !cell.isMine) {
+      return accum;
+    }
+
+    return accum + 1;
+  }, 0);
+
+  return count;
+};
+
+const checkCell_ = (state: State, col: number, row: number): State => {
   const cell = getCellOrThrow(state.grid, col, row);
   if (cell.isClicked) {
     return state;
@@ -86,7 +112,7 @@ export const markCell = (db: DB, col: number, row: number) => {
   db.reset(state);
 };
 
-export const createGrid = (width: number, height: number, chanceOfMine: number): Grid => {
+const createGrid = (numCols: number, numRows: number, chanceOfMine: number): Grid => {
   console.assert(chanceOfMine >= 0.0 && chanceOfMine <= 1.0);
 
   return [
@@ -98,33 +124,20 @@ export const createGrid = (width: number, height: number, chanceOfMine: number):
             isClicked: false,
             isFlagged: false,
           };
-        }, range(height)),
+        }, range(numRows)),
       ];
-    }, range(width)),
+    }, range(numCols)),
   ];
 };
 
-export const createGame = (): State => {
+const createGame = (numCols: number, numRows: number, chanceOfMine: number): State => {
   return {
-    grid: createGrid(9, 9, 0.1),
+    grid: createGrid(numCols, numRows, chanceOfMine),
     playState: "playing",
   };
 };
 
-export const newGame = (db: DB) => {
-  db.reset(createGame());
-};
+export const createDefaultGame = () =>
+  createGame(DEFAULT_NUM_COLS, DEFAULT_NUM_ROWS, DEFAULT_CHANCE_OF_MINE);
 
-export const getMineCount = (state: State, col: number, row: number): number => {
-  const count = NEIGHBOR_DELTAS.reduce((accum, { col: colDelta, row: rowDelta }) => {
-    const cell = getCell(state.grid, col + colDelta, row + rowDelta);
-
-    if (cell === undefined || !cell.isMine) {
-      return accum;
-    }
-
-    return accum + 1;
-  }, 0);
-
-  return count;
-};
+export const newGame = (db: DB) => db.reset(createDefaultGame());

@@ -1,5 +1,9 @@
 import { Atom } from "@thi.ng/atom/atom";
 
+export const DEFAULT_NUM_COLS = 9;
+export const DEFAULT_NUM_ROWS = 9;
+export const DEFAULT_CHANCE_OF_MINE = 0.1;
+
 export interface Cell {
   isMine: boolean;
   isClicked: boolean;
@@ -7,7 +11,6 @@ export interface Cell {
 }
 
 export type Grid = Cell[][];
-
 
 export type PlayState = "playing" | "win" | "lose";
 
