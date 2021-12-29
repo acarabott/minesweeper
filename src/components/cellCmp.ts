@@ -23,7 +23,7 @@ export const cellCmp = (db: DB, col: number, row: number) => {
       return {
         text: `${mineCount}`,
         background: "rgb(220, 220, 220)",
-        color: mineCount === 1 ? "green" : mineCount === 2 ? "green" : "red",
+        color: mineCount === 1 ? "green" : mineCount === 2 ? "blue" : "red",
       };
     } else if (cell.isFlagged) {
       return { text: "🚩", background: "rgb(220, 220, 220)", color };

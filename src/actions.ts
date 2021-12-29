@@ -8,6 +8,7 @@ import {
   DEFAULT_NUM_COLS,
   DEFAULT_NUM_ROWS,
   DEFAULT_CHANCE_OF_MINE,
+  Row,
 } from "./api";
 
 // prettier-ignore
@@ -21,6 +22,9 @@ const NEIGHBOR_DELTAS = [
   { col: 0, row: 1 },   // s
   { col: 1, row: 1 },   // se
 ];
+
+// helpers
+// -----------------------------------------------------------------------------
 
 export const getNumRows = (grid: Grid): number => grid.length;
 
@@ -62,7 +66,10 @@ export const getMineCount = (state: State, col: number, row: number): number => 
   return count;
 };
 
-const checkCell_ = (state: State, col: number, row: number): State => {
+// user actions
+// -----------------------------------------------------------------------------
+
+const _checkCell = (state: State, col: number, row: number): State => {
   const cell = getCellOrThrow(state.grid, col, row);
   if (cell.isClicked) {
     return state;
@@ -80,7 +87,7 @@ const checkCell_ = (state: State, col: number, row: number): State => {
       const neighborMineCount = getMineCount(state, neighborCol, neighborRow);
       if (neighborCell !== undefined && !neighborCell.isMine) {
         if (neighborMineCount === 0) {
-          state = checkCell_(state, neighborCol, neighborRow);
+          state = _checkCell(state, neighborCol, neighborRow);
         } else {
           neighborCell.isClicked = true;
         }
@@ -101,16 +108,21 @@ const checkCell_ = (state: State, col: number, row: number): State => {
 };
 
 export const checkCell = (db: DB, col: number, row: number) =>
-  db.reset(checkCell_(db.deref(), col, row));
+  db.reset(_checkCell(db.deref(), col, row));
 
 export const markCell = (db: DB, col: number, row: number) =>
   db.swapIn(["grid", row, col, "isFlagged"], (isFlagged) => !isFlagged);
 
+// game creation
+// -----------------------------------------------------------------------------
 const createGrid = (numCols: number, numRows: number, chanceOfMine: number): Grid => {
-  console.assert(chanceOfMine >= 0.0 && chanceOfMine <= 1.0);
+  console.assert(numCols > 0);
+  console.assert(numRows > 0);
+  console.assert(chanceOfMine >= 0.0);
+  console.assert(chanceOfMine <= 1.0);
 
   return [
-    ...map((): Cell[] => {
+    ...map((): Row => {
       return [
         ...map((): Cell => {
           return {

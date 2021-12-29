@@ -2,7 +2,7 @@ import { Atom } from "@thi.ng/atom/atom";
 
 export const DEFAULT_NUM_COLS = 9;
 export const DEFAULT_NUM_ROWS = 9;
-export const DEFAULT_CHANCE_OF_MINE = 0.1;
+export const DEFAULT_CHANCE_OF_MINE = 0.25;
 
 export interface Cell {
   isMine: boolean;
@@ -10,7 +10,9 @@ export interface Cell {
   isFlagged: boolean;
 }
 
-export type Grid = Cell[][];
+export type Row = Cell[];
+
+export type Grid = Row[];
 
 export type PlayState = "playing" | "win" | "lose";
 
