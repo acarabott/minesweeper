@@ -69,32 +69,33 @@ export const getMineCount = (state: State, col: number, row: number): number => 
 // user actions
 // -----------------------------------------------------------------------------
 
+// this is where all the action lives
+// this does mutation
 const _checkCell = (state: State, col: number, row: number): State => {
+  // if the cell is already clicked, return early. Important because this is recursive
   const cell = getCellOrThrow(state.grid, col, row);
   if (cell.isClicked) {
     return state;
   }
 
+  // mark cell and clicked
   cell.isClicked = true;
 
-  const mineCount = getMineCount(state, col, row);
-
-  if (mineCount === 0) {
+  // if we hit an empty cell (touching no mines), recursively check all of its neighbors
+  if (getMineCount(state, col, row) === 0) {
     for (const delta of NEIGHBOR_DELTAS) {
       const neighborCol = col + delta.col;
       const neighborRow = row + delta.row;
       const neighborCell = getCell(state.grid, neighborCol, neighborRow);
-      const neighborMineCount = getMineCount(state, neighborCol, neighborRow);
+
       if (neighborCell !== undefined && !neighborCell.isMine && !neighborCell.isClicked) {
-        if (neighborMineCount === 0) {
-          state = _checkCell(state, neighborCol, neighborRow);
-        } else {
-          neighborCell.isClicked = true;
-        }
+        // recursion is here
+        state = _checkCell(state, neighborCol, neighborRow);
       }
     }
   }
 
+  // check end game state, did we lose/win?
   if (cell.isMine) {
     state.playState = "lose";
   } else {
