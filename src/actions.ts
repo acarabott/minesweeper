@@ -30,17 +30,10 @@ export const getNumRows = (grid: Grid): number => grid.length;
 
 export const getNumCols = (grid: Grid): number => (grid.length > 0 ? grid[0].length : 0);
 
-const isValidPosition = (grid: Grid, col: number, row: number): boolean => {
-  return row >= 0 && row < getNumRows(grid) && col >= 0 && col < getNumCols(grid);
-};
-
-const getCell = (grid: Grid, col: number, row: number): Cell | undefined => {
-  if (!isValidPosition(grid, col, row)) {
-    return undefined;
-  }
-
-  return grid[row][col];
-};
+const getCell = (grid: Grid, col: number, row: number): Cell | undefined =>
+  row >= 0 && row < getNumRows(grid) && col >= 0 && col < getNumCols(grid)
+    ? grid[row][col]
+    : undefined;
 
 export const getCellOrThrow = (grid: Grid, col: number, row: number): Cell => {
   const cell = getCell(grid, col, row);
