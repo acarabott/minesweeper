@@ -20,10 +20,6 @@ export const gridCmp = (db: DB) => {
         "grid-template-rows": `repeat(${getNumRows(state.grid)}, 1fr)`,
       },
     },
-    ...mapIndexed((y, row) => {
-      return mapIndexed((x) => {
-        return cellCmp(db, x, y);
-      }, row);
-    }, state.grid),
+    ...mapIndexed((y, row) => mapIndexed((x) => cellCmp(db, x, y), row), state.grid),
   );
 };
