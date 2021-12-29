@@ -35,6 +35,7 @@ export const cellCmp = (db: DB, col: number, row: number) => {
   return div(
     {
       oncontextmenu: (event) => {
+        // right click
         event.preventDefault();
         markCell(db, col, row);
       },
