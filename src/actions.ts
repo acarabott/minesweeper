@@ -78,14 +78,14 @@ const _checkCell = (state: State, col: number, row: number): State => {
     }
   }
 
+  const areAllRevealed = (state: State) =>
+    state.grid.flat().every((cell) => cell.state === "revealed" || cell.isMine);
+
   // check end game state, did we lose/win?
   if (cell.isMine) {
     state.playState = "lose";
-  } else {
-    const allChecked = state.grid.flat().every((cell) => cell.state === "revealed" || cell.isMine);
-    if (allChecked) {
-      state.playState = "win";
-    }
+  } else if (areAllRevealed(state)) {
+    state.playState = "win";
   }
 
   return state;
