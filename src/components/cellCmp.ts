@@ -1,10 +1,10 @@
 import { div } from "@thi.ng/hiccup-html";
-import { getCellOrThrow, getMineCount, flagCell, checkCell } from "../actions";
+import { getCell, getMineCount, flagCell, checkCell } from "../actions";
 import { DB } from "../api";
 
 export const cellCmp = (db: DB, col: number, row: number) => {
   const state = db.deref();
-  const cell = getCellOrThrow(state.grid, col, row);
+  const cell = getCell(state.grid, col, row);
 
   const { text, background, color } = (() => {
     const color = "black";

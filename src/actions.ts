@@ -30,30 +30,27 @@ export const getNumRows = (grid: Grid): number => grid.length;
 
 export const getNumCols = (grid: Grid): number => (grid.length > 0 ? grid[0].length : 0);
 
-const getCell = (grid: Grid, col: number, row: number): Cell | undefined =>
-  row >= 0 && row < getNumRows(grid) && col >= 0 && col < getNumCols(grid)
-    ? grid[row][col]
-    : undefined;
+const isValidPosition = (grid: Grid, col: number, row: number): boolean =>
+  row >= 0 && row < getNumRows(grid) && col >= 0 && col < getNumCols(grid);
 
-export const getCellOrThrow = (grid: Grid, col: number, row: number): Cell => {
-  const cell = getCell(grid, col, row);
-
-  if (cell === undefined) {
-    throw new RangeError(`Bad cell co-ordinates: ${col}, ${row}`);
+export const getCell = (grid: Grid, col: number, row: number): Cell => {
+  if (isValidPosition(grid, col, row)) {
+    return grid[row][col];
   }
 
-  return cell;
+  throw new RangeError(`Bad cell co-ordinates: ${col}, ${row}`);
 };
 
 export const getMineCount = (state: State, col: number, row: number): number => {
   const count = NEIGHBOR_DELTAS.reduce((accum, { col: colDelta, row: rowDelta }) => {
-    const cell = getCell(state.grid, col + colDelta, row + rowDelta);
+    const neighborCol = col + colDelta;
+    const neighborRow = row + rowDelta;
 
-    if (cell === undefined || !cell.isMine) {
+    if (!isValidPosition(state.grid, neighborCol, neighborRow)) {
       return accum;
     }
 
-    return accum + 1;
+    return getCell(state.grid, neighborCol, neighborRow).isMine ? accum + 1 : accum;
   }, 0);
 
   return count;
@@ -63,15 +60,15 @@ export const getMineCount = (state: State, col: number, row: number): number => 
 // -----------------------------------------------------------------------------
 
 // this is where all the action lives
-// this does mutation
+// warning is recursive and does mutation!
 const _checkCell = (state: State, col: number, row: number): State => {
   // if the cell is already clicked, return early. Important because this is recursive
-  const cell = getCellOrThrow(state.grid, col, row);
+  const cell = getCell(state.grid, col, row);
   if (cell.state === "revealed") {
     return state;
   }
 
-  // mark cell and clicked
+  // update this cell state
   cell.state = "revealed";
 
   // if we hit an empty cell (touching no mines), recursively check all of its neighbors
@@ -79,11 +76,12 @@ const _checkCell = (state: State, col: number, row: number): State => {
     for (const delta of NEIGHBOR_DELTAS) {
       const neighborCol = col + delta.col;
       const neighborRow = row + delta.row;
-      const neighborCell = getCell(state.grid, neighborCol, neighborRow);
-
-      if (neighborCell !== undefined && !neighborCell.isMine && neighborCell.state !== "revealed") {
-        // recursion is here
-        state = _checkCell(state, neighborCol, neighborRow);
+      if (isValidPosition(state.grid, neighborCol, neighborRow)) {
+        const neighborCell = getCell(state.grid, neighborCol, neighborRow);
+        if (!neighborCell.isMine && neighborCell.state !== "revealed") {
+          // recursion is here
+          state = _checkCell(state, neighborCol, neighborRow);
+        }
       }
     }
   }
