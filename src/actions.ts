@@ -85,7 +85,7 @@ const _checkCell = (state: State, col: number, row: number): State => {
       const neighborRow = row + delta.row;
       const neighborCell = getCell(state.grid, neighborCol, neighborRow);
       const neighborMineCount = getMineCount(state, neighborCol, neighborRow);
-      if (neighborCell !== undefined && !neighborCell.isMine) {
+      if (neighborCell !== undefined && !neighborCell.isMine && !neighborCell.isClicked) {
         if (neighborMineCount === 0) {
           state = _checkCell(state, neighborCol, neighborRow);
         } else {
