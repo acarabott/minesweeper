@@ -1,6 +1,6 @@
 import { range } from "@thi.ng/transducers";
 import { map } from "@thi.ng/transducers/map";
-import { DB, Grid, Square, State } from "./api";
+import { DB, Grid, Cell, State } from "./api";
 
 // prettier-ignore
 const NEIGHBOR_DELTAS = [
@@ -18,7 +18,7 @@ const isValidPosition = (grid: Grid, col: number, row: number): boolean => {
   return row >= 0 && row < grid.length && col >= 0 && col < grid[0].length;
 };
 
-export const getSquare = (grid: Grid, col: number, row: number): Square | undefined => {
+export const getCell = (grid: Grid, col: number, row: number): Cell | undefined => {
   if (!isValidPosition(grid, col, row)) {
     return undefined;
   }
@@ -26,23 +26,23 @@ export const getSquare = (grid: Grid, col: number, row: number): Square | undefi
   return grid[row][col];
 };
 
-export const getSquareOrThrow = (grid: Grid, col: number, row: number): Square => {
-  const square = getSquare(grid, col, row);
+export const getCellOrThrow = (grid: Grid, col: number, row: number): Cell => {
+  const cell = getCell(grid, col, row);
 
-  if (square === undefined) {
-    throw new RangeError(`Bad square co-ordinates: ${col}, ${row}`);
+  if (cell === undefined) {
+    throw new RangeError(`Bad cell co-ordinates: ${col}, ${row}`);
   }
 
-  return square;
+  return cell;
 };
 
-export const checkSquare_ = (state: State, col: number, row: number): State => {
-  const square = getSquareOrThrow(state.grid, col, row);
-  if (square.isClicked) {
+export const checkCell_ = (state: State, col: number, row: number): State => {
+  const cell = getCellOrThrow(state.grid, col, row);
+  if (cell.isClicked) {
     return state;
   }
 
-  square.isClicked = true;
+  cell.isClicked = true;
 
   const mineCount = getMineCount(state, col, row);
 
@@ -50,22 +50,22 @@ export const checkSquare_ = (state: State, col: number, row: number): State => {
     for (const delta of NEIGHBOR_DELTAS) {
       const neighborCol = col + delta.col;
       const neighborRow = row + delta.row;
-      const neighborSquare = getSquare(state.grid, neighborCol, neighborRow);
+      const neighborCell = getCell(state.grid, neighborCol, neighborRow);
       const neighborMineCount = getMineCount(state, neighborCol, neighborRow);
-      if (neighborSquare !== undefined && !neighborSquare.isMine) {
+      if (neighborCell !== undefined && !neighborCell.isMine) {
         if (neighborMineCount === 0) {
-          state = checkSquare_(state, neighborCol, neighborRow);
+          state = checkCell_(state, neighborCol, neighborRow);
         } else {
-          neighborSquare.isClicked = true;
+          neighborCell.isClicked = true;
         }
       }
     }
   }
 
-  if (square.isMine) {
+  if (cell.isMine) {
     state.playState = "lose";
   } else {
-    const allChecked = state.grid.flat().every((square) => square.isClicked || square.isMine);
+    const allChecked = state.grid.flat().every((cell) => cell.isClicked || cell.isMine);
     if (allChecked) {
       state.playState = "win";
     }
@@ -74,14 +74,14 @@ export const checkSquare_ = (state: State, col: number, row: number): State => {
   return state;
 };
 
-export const checkSquare = (db: DB, col: number, row: number) =>
-  db.reset(checkSquare_(db.deref(), col, row));
+export const checkCell = (db: DB, col: number, row: number) =>
+  db.reset(checkCell_(db.deref(), col, row));
 
-export const markSquare = (db: DB, col: number, row: number) => {
+export const markCell = (db: DB, col: number, row: number) => {
   const state = db.deref();
-  const square = getSquareOrThrow(state.grid, col, row);
+  const cell = getCellOrThrow(state.grid, col, row);
 
-  square.isFlagged = !square.isFlagged;
+  cell.isFlagged = !cell.isFlagged;
 
   db.reset(state);
 };
@@ -90,9 +90,9 @@ export const createGrid = (width: number, height: number, chanceOfMine: number):
   console.assert(chanceOfMine >= 0.0 && chanceOfMine <= 1.0);
 
   return [
-    ...map((): Square[] => {
+    ...map((): Cell[] => {
       return [
-        ...map((): Square => {
+        ...map((): Cell => {
           return {
             isMine: Math.random() < chanceOfMine,
             isClicked: false,
@@ -117,9 +117,9 @@ export const newGame = (db: DB) => {
 
 export const getMineCount = (state: State, col: number, row: number): number => {
   const count = NEIGHBOR_DELTAS.reduce((accum, { col: colDelta, row: rowDelta }) => {
-    const square = getSquare(state.grid, col + colDelta, row + rowDelta);
+    const cell = getCell(state.grid, col + colDelta, row + rowDelta);
 
-    if (square === undefined || !square.isMine) {
+    if (cell === undefined || !cell.isMine) {
       return accum;
     }
 

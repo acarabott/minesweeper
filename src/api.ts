@@ -1,12 +1,12 @@
 import { Atom } from "@thi.ng/atom/atom";
 
-export interface Square {
+export interface Cell {
   isMine: boolean;
   isClicked: boolean;
   isFlagged: boolean;
 }
 
-export type Grid = Square[][];
+export type Grid = Cell[][];
 
 
 export type PlayState = "playing" | "win" | "lose";

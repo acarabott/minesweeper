@@ -3,38 +3,38 @@ import { start } from "@thi.ng/hdom";
 import { button, div } from "@thi.ng/hiccup-html";
 import { mapIndexed } from "@thi.ng/transducers";
 import {
-  checkSquare,
+  checkCell,
   createGame,
   getMineCount,
-  getSquareOrThrow,
-  markSquare,
+  getCellOrThrow,
+  markCell,
   newGame,
 } from "./actions";
 import { DB, State } from "./api";
 
-const squareCmp = (db: DB, col: number, row: number) => {
+const cellCmp = (db: DB, col: number, row: number) => {
   const state = db.deref();
-  const square = getSquareOrThrow(state.grid, col, row);
+  const cell = getCellOrThrow(state.grid, col, row);
 
-  const isRevealed = square.isClicked || state.playState === "win" || state.playState === "lose";
+  const isRevealed = cell.isClicked || state.playState === "win" || state.playState === "lose";
 
   const mineCount = isRevealed ? getMineCount(state, col, row) : 0;
 
-  const text = (() => {
+  const { text, background } = (() => {
     if (isRevealed) {
-      if (square.isMine) {
-        return "💣";
+      if (cell.isMine) {
+        return { text: "💣", background: "red" };
       }
 
       if (mineCount === 0) {
-        return "";
+        return { text: "", background: "rgb(220, 220, 220)" };
       }
 
-      return `${mineCount}`;
-    } else if (square.isFlagged) {
-      return "🚩";
+      return { text: `${mineCount}`, background: "rgb(220, 220, 220)" };
+    } else if (cell.isFlagged) {
+      return { text: "🚩", background: "rgb(220, 220, 220)" };
     } else {
-      return "?";
+      return { text: "?", background: "rgb(255, 255, 255)" };
     }
   })();
 
@@ -42,10 +42,10 @@ const squareCmp = (db: DB, col: number, row: number) => {
     {
       oncontextmenu: (event) => {
         event.preventDefault();
-        markSquare(db, col, row);
+        markCell(db, col, row);
       },
       onclick: () => {
-        checkSquare(db, col, row);
+        checkCell(db, col, row);
       },
       style: {
         "font-size": "4vh",
@@ -57,7 +57,7 @@ const squareCmp = (db: DB, col: number, row: number) => {
         "justify-content": "center",
         "align-items": "center",
         border: "1px black solid",
-        background: !square.isClicked ? "white" : square.isMine ? "red" : "rgb(220, 220, 220)",
+        background,
         color:
           mineCount === 0
             ? " black"
@@ -78,7 +78,6 @@ const gridCmp = (db: DB) => {
   return div(
     {
       style: {
-        border: "1px red solid",
         position: "absolute",
         left: 0,
         top: 0,
@@ -92,7 +91,7 @@ const gridCmp = (db: DB) => {
     },
     ...mapIndexed((y, row) => {
       return mapIndexed((x) => {
-        return squareCmp(db, x, y);
+        return cellCmp(db, x, y);
       }, row);
     }, state.grid),
   );
