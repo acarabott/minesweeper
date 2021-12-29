@@ -1,15 +1,7 @@
+import { fit01, inRange } from "@thi.ng/math";
 import { range } from "@thi.ng/transducers";
 import { map } from "@thi.ng/transducers/map";
-import {
-  DB,
-  Grid,
-  Cell,
-  State,
-  DEFAULT_NUM_COLS,
-  DEFAULT_NUM_ROWS,
-  DEFAULT_CHANCE_OF_MINE,
-  Row,
-} from "./api";
+import { Cell, DB, Grid, MAX_MINE_CHANCE, MIN_MINE_CHANCE, Row, State } from "./api";
 
 // prettier-ignore
 const NEIGHBOR_DELTAS = [
@@ -110,18 +102,20 @@ export const flagCell = (db: DB, col: number, row: number) =>
 
 // game creation
 // -----------------------------------------------------------------------------
-const createGrid = (numCols: number, numRows: number, chanceOfMine: number): Grid => {
+const createGrid = (numCols: number, numRows: number, difficulty_01: number): Grid => {
   console.assert(numCols > 0);
   console.assert(numRows > 0);
-  console.assert(chanceOfMine >= 0.0);
-  console.assert(chanceOfMine <= 1.0);
+  console.assert(inRange(difficulty_01, 0.0, 1.0));
+
+  const chance = fit01(difficulty_01, MIN_MINE_CHANCE, MAX_MINE_CHANCE);
 
   return [
-    ...map((): Row => {
+    ...map((col): Row => {
       return [
-        ...map((): Cell => {
+        ...map((row): Cell => {
+          const isCorner = (col === 0 || col === numCols - 1) && (row === 0 || row === numRows - 1);
           return {
-            isMine: Math.random() < chanceOfMine,
+            isMine: Math.random() < chance * (isCorner ? 0.5 : 1.0),
             state: "hidden",
           };
         }, range(numRows)),
@@ -130,14 +124,13 @@ const createGrid = (numCols: number, numRows: number, chanceOfMine: number): Gri
   ];
 };
 
-const createGame = (numCols: number, numRows: number, chanceOfMine: number): State => {
+export const createGame = (numCols: number, numRows: number, difficulty_01: number): State => {
   return {
-    grid: createGrid(numCols, numRows, chanceOfMine),
+    grid: createGrid(numCols, numRows, difficulty_01),
     playState: "playing",
+    difficulty_01,
   };
 };
 
-export const createDefaultGame = () =>
-  createGame(DEFAULT_NUM_COLS, DEFAULT_NUM_ROWS, DEFAULT_CHANCE_OF_MINE);
-
-export const newGame = (db: DB) => db.reset(createDefaultGame());
+export const newGame = (db: DB, numCols: number, numRows: number, difficulty_01: number) =>
+  db.reset(createGame(numCols, numRows, difficulty_01));
