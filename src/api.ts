@@ -2,7 +2,7 @@ import { Atom } from "@thi.ng/atom/atom";
 
 export const DEFAULT_NUM_COLS = 9;
 export const DEFAULT_NUM_ROWS = 9;
-export const DEFAULT_CHANCE_OF_MINE = 0.25;
+export const DEFAULT_CHANCE_OF_MINE = 0.15;
 
 export interface Cell {
   isMine: boolean;
