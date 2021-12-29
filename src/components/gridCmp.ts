@@ -19,7 +19,6 @@ export const gridCmp = (db: DB) => {
         "grid-template-columns": `repeat(${getNumCols(state.grid)}, 1fr)`,
         "grid-template-rows": `repeat(${getNumRows(state.grid)}, 1fr)`,
       },
-      onmousedown: () => {},
     },
     ...mapIndexed((y, row) => {
       return mapIndexed((x) => {
