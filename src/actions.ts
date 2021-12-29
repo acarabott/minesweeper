@@ -103,14 +103,8 @@ const checkCell_ = (state: State, col: number, row: number): State => {
 export const checkCell = (db: DB, col: number, row: number) =>
   db.reset(checkCell_(db.deref(), col, row));
 
-export const markCell = (db: DB, col: number, row: number) => {
-  const state = db.deref();
-  const cell = getCellOrThrow(state.grid, col, row);
-
-  cell.isFlagged = !cell.isFlagged;
-
-  db.reset(state);
-};
+export const markCell = (db: DB, col: number, row: number) =>
+  db.swapIn(["grid", row, col, "isFlagged"], (isFlagged) => !isFlagged);
 
 const createGrid = (numCols: number, numRows: number, chanceOfMine: number): Grid => {
   console.assert(chanceOfMine >= 0.0 && chanceOfMine <= 1.0);
