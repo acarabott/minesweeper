@@ -74,12 +74,12 @@ export const getMineCount = (state: State, col: number, row: number): number => 
 const _checkCell = (state: State, col: number, row: number): State => {
   // if the cell is already clicked, return early. Important because this is recursive
   const cell = getCellOrThrow(state.grid, col, row);
-  if (cell.isClicked) {
+  if (cell.state === "revealed") {
     return state;
   }
 
   // mark cell and clicked
-  cell.isClicked = true;
+  cell.state = "revealed";
 
   // if we hit an empty cell (touching no mines), recursively check all of its neighbors
   if (getMineCount(state, col, row) === 0) {
@@ -88,7 +88,7 @@ const _checkCell = (state: State, col: number, row: number): State => {
       const neighborRow = row + delta.row;
       const neighborCell = getCell(state.grid, neighborCol, neighborRow);
 
-      if (neighborCell !== undefined && !neighborCell.isMine && !neighborCell.isClicked) {
+      if (neighborCell !== undefined && !neighborCell.isMine && neighborCell.state !== "revealed") {
         // recursion is here
         state = _checkCell(state, neighborCol, neighborRow);
       }
@@ -99,7 +99,7 @@ const _checkCell = (state: State, col: number, row: number): State => {
   if (cell.isMine) {
     state.playState = "lose";
   } else {
-    const allChecked = state.grid.flat().every((cell) => cell.isClicked || cell.isMine);
+    const allChecked = state.grid.flat().every((cell) => cell.state === "revealed" || cell.isMine);
     if (allChecked) {
       state.playState = "win";
     }
@@ -111,8 +111,11 @@ const _checkCell = (state: State, col: number, row: number): State => {
 export const checkCell = (db: DB, col: number, row: number) =>
   db.reset(_checkCell(db.deref(), col, row));
 
-export const markCell = (db: DB, col: number, row: number) =>
-  db.swapIn(["grid", row, col, "isFlagged"], (isFlagged) => !isFlagged);
+export const flagCell = (db: DB, col: number, row: number) =>
+  db.swapIn(
+    ["grid", row, col, "state"],
+    (state) => (({ revealed: "revealed", flagged: "hidden", hidden: "flagged" } as const)[state]),
+  );
 
 // game creation
 // -----------------------------------------------------------------------------
@@ -128,8 +131,7 @@ const createGrid = (numCols: number, numRows: number, chanceOfMine: number): Gri
         ...map((): Cell => {
           return {
             isMine: Math.random() < chanceOfMine,
-            isClicked: false,
-            isFlagged: false,
+            state: "hidden",
           };
         }, range(numRows)),
       ];

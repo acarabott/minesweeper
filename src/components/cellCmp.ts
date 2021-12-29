@@ -1,5 +1,5 @@
 import { div } from "@thi.ng/hiccup-html";
-import { getCellOrThrow, getMineCount, markCell, checkCell } from "../actions";
+import { getCellOrThrow, getMineCount, flagCell, checkCell } from "../actions";
 import { DB } from "../api";
 
 export const cellCmp = (db: DB, col: number, row: number) => {
@@ -9,7 +9,7 @@ export const cellCmp = (db: DB, col: number, row: number) => {
   const { text, background, color } = (() => {
     const color = "black";
 
-    if (cell.isClicked || state.playState === "win" || state.playState === "lose") {
+    if (cell.state === "revealed" || state.playState === "win" || state.playState === "lose") {
       if (cell.isMine) {
         return { text: "💣", background: "red", color };
       }
@@ -25,7 +25,7 @@ export const cellCmp = (db: DB, col: number, row: number) => {
         background: "rgb(220, 220, 220)",
         color: mineCount === 1 ? "green" : mineCount === 2 ? "blue" : "red",
       };
-    } else if (cell.isFlagged) {
+    } else if (cell.state === "flagged") {
       return { text: "🚩", background: "rgb(220, 220, 220)", color };
     } else {
       return { text: "?", background: "rgb(255, 255, 255)", color };
@@ -37,7 +37,7 @@ export const cellCmp = (db: DB, col: number, row: number) => {
       oncontextmenu: (event) => {
         // right click
         event.preventDefault();
-        markCell(db, col, row);
+        flagCell(db, col, row);
       },
       onclick: () => checkCell(db, col, row),
       style: {

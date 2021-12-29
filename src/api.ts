@@ -6,8 +6,7 @@ export const DEFAULT_CHANCE_OF_MINE = 0.15;
 
 export interface Cell {
   isMine: boolean;
-  isClicked: boolean;
-  isFlagged: boolean;
+  state: "hidden" | "revealed" | "flagged";
 }
 
 export type Row = Cell[];
