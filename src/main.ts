@@ -18,7 +18,7 @@ const squareCmp = (db: DB, col: number, row: number) => {
 
   const isRevealed = square.isClicked || state.playState === "win" || state.playState === "lose";
 
-  const mineCount = isRevealed ? getMineCount(db, col, row) : 0;
+  const mineCount = isRevealed ? getMineCount(state, col, row) : 0;
 
   const text = (() => {
     if (isRevealed) {
@@ -57,7 +57,7 @@ const squareCmp = (db: DB, col: number, row: number) => {
         "justify-content": "center",
         "align-items": "center",
         border: "1px black solid",
-        background: !square.isClicked ? "white" : square.isMine ? "red" : "rgb(200, 200, 200)",
+        background: !square.isClicked ? "white" : square.isMine ? "red" : "rgb(220, 220, 220)",
         color:
           mineCount === 0
             ? " black"
